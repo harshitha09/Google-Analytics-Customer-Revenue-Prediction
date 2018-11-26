@@ -1,0 +1,160 @@
+---
+title: "practice"
+author: "HARSHITHA MEKALA"
+date: "3 November 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+kaggle_train <- read_csv("E://Machine Learning/My practice/Kaggle_AV projects/Google Analytics Customer Revenue Prediction_kaggle/train.csv")
+
+View(kaggle_train) 
+#There is a json columns.(device, geoNetwork, trafficSource, totals) and the date column type has to be changed
+
+kaggle_test <- read_csv("E://Machine Learning/My practice/Kaggle_AV projects/Google Analytics Customer Revenue Prediction_kaggle/test.csv")
+
+View(kaggle_test) 
+
+```
+
+
+
+```{r}
+dim(kaggle_train)
+dim(kaggle_test)
+```
+
+```{r}
+names(kaggle_train)
+head(kaggle_train)["device"]
+
+```
+
+# flattening the device column
+```{r}
+flat_device <- paste("[", paste(kaggle_train$device, collapse = ","), "]") %>% 
+                      fromJSON(flatten = T)
+
+names(flat_device)
+head(flat_device$browser)
+View(flat_device)
+#ISight : all the columns are categorical.
+
+
+# finding the unique values for each column in falttened device column
+sapply(flat_device, unique)
+
+
+'Key Insights:
+we can actually remove the columns which has only a single level. 
+The col are :
+1.Browser version
+2.Browser Size 
+3.Operating System Version 
+4.Mobile device Model 
+5.Mobile input selector 
+6.mobileDeviceInfo 
+7.mobileDeviceMarketingName
+8.flashVersion
+9.language
+10.screenColors
+11.screenResolution
+12.deviceCategory
+13.mobileDeviceBranding
+
+There are 54 unique browsers'
+
+```
+
+# Now falttening the rest of the JSON columns
+```{r}
+tr_geonetwork <- paste("[", paste(kaggle_train$geoNetwork, collapse = ","), "]") %>% fromJSON(flatten = T)
+names(tr_geonetwork)
+
+View(tr_geonetwork)
+
+# all are categoical, Hence we can find the unique levels
+
+#sapply(tr_geonetwork, unique)
+
+# too much of text data which has to be cleaned
+```
+
+
+# flattening the trafficsourse column
+```{r}
+tr_trafficsource <- paste("[", paste(kaggle_train$trafficSource, collapse = ","), "]") %>% fromJSON(flatten = T)
+
+View(tr_trafficsource)
+#names(tr_trafficsource)
+
+#sapply(tr_trafficsource, unique)
+```
+
+
+# flatening the totals column
+```{r}
+tr_Totals <- paste("[", paste(kaggle_train$totals, collapse = ","), "]") %>% fromJSON(flatten = T)
+
+#names(tr_Totals)
+
+View(tr_Totals)
+# our target variable transactionRevenue is present here.
+
+dim(train_data)
+sum(is.na(tr_Totals$transactionRevenue))
+# out of 903653 values, out target variable has 892138 missing values
+
+#sapply(tr_Totals[, 1:5], unique)
+
+# Visits has only one unique value
+#  Bounces and newvisits are completely empty columns. hence we can remove them
+
+```
+
+# cbind the flattened columns to the original dataset
+```{r}
+kaggle_train <- cbind(tr_Totals, tr_trafficsource, tr_geonetwork,flat_device,kaggle_train)
+dim(kaggle_train)
+
+#names(kaggle_train)
+
+```
+
+#removing the columns which has only a single level
+```{r}
+kaggle_train <- (kaggle_train[, sapply(kaggle_train, function(x) length(unique(x)))>1])
+dim(kaggle_train)
+#names(kaggle_train)
+#View(kaggle_train)
+
+#remove the old json columns
+kaggle_train$totals = NULL
+kaggle_train$device = NULL
+kaggle_train$geoNetwork = NULL
+kaggle_train$trafficSource = NULL
+
+names(kaggle_train)
+View(kaggle_train)
+
+```
+
+# now we got the tidy data columns
+```{r}
+View(kaggle_train)
+names(kaggle_train)
+
+# date and visitstarttime has to be converted to date 
+
+kaggle_train$date <- as.Date(as.character(kaggle_train$date), format = '%Y%m%d')
+class(jaggle)
+kaggle_train$visitStartTime <- as_datetime(kaggle_train$visitStartTime)
+
+```
+
